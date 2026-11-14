@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel Watchdog — an open agent network for large cross-chain transfers</title>
+<meta name="description" content="An open agentic watchdog: a Reactive Network sentinel watches large WETH transfers on Base Sepolia and raises cross-chain alerts. This site publishes the agent network (manifest + network definition + browser runtime) so anyone can inspect, load, and call it.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <span class="badge">Open Agentic Web</span>
+    <span class="badge">Testnet — live on-chain</span>
+    <span class="badge warn">No wallet needed</span>
+  </div>
+  <h1>🛡️ Sentinel Watchdog</h1>
+  <p class="tagline">
+    A watchdog for large cross-chain transfers, published as an open agent network.
+    An autonomous sentinel on the Reactive Network watches WETH transfers on Base Sepolia
+    and raises an alert on the origin chain when a transfer passes the threshold —
+    no server, no human in the loop. This website publishes that network so any person
+    or agent runtime can inspect it, load it, and ask it questions.
+  </p>
+</header>
+
+<main>
+
+  <section id="status">
+    <h2>Live watchdog state</h2>
+    <p class="verdict-line">Current verdict: <span id="verdict">…</span></p>
+    <div class="cards">
+      <article class="card">
+        <h3>Sentinel — Lasna (Reactive testnet)</h3>
+        <p class="mono">Contract: <span id="contract-address">0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9</span><br>
+        Chain ID 5318007 · watches WETH transfers on Base Sepolia</p>
+        <dl class="stats">
+          <dt>Large transfers flagged</dt><dd id="lv-count">…</dd>
+          <dt>Latest flagged amount</dt><dd id="lv-amount">…</dd>
+          <dt>Latest flagged at block</dt><dd id="lv-block">…</dd>
+          <dt>Threshold</dt><dd id="lv-threshold">…</dd>
+          <dt>Contract balance (fuel)</dt><dd id="lv-balance">…</dd>
+          <dt>Last cron block</dt><dd id="lv-cron">…</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h3>SentinelCallback — Base Sepolia</h3>
+        <p class="mono">Same contract address, chain ID 84532 ·
+        <a id="explorer-link" href="https://sepolia.basescan.org/address/0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9" rel="noopener">view on Basescan</a></p>
+        <dl class="stats">
+          <dt>Alerts received</dt><dd id="cb-count">…</dd>
+          <dt>Latest alert amount</dt><dd id="cb-amount">…</dd>
+          <dt>Latest alert at block</dt><dd id="cb-block">…</dd>
+        </dl>
+        <p>Every flagged transfer should produce exactly one callback alert here.
+        If the two counts ever differ, the watchdog itself has something to explain.</p>
+      </article>
+    </div>
+    <p id="state-source" class="source">Reading live state…</p>
+    <button id="btn-refresh" type="button">↻ Refresh on-chain state</button>
+  </section>
+
+  <section id="how">
+    <h2>How the network works</h2>
+    <ol class="flow">
+      <li><strong>Watch.</strong> The Sentinel reactive contract on Lasna subscribes to
+        <code>Transfer</code> events of the WETH contract on Base Sepolia
+        (<code>0x4200000000000000000000000000000000000006</code>).</li>
+      <li><strong>Decide on-chain.</strong> A transfer at or above the threshold
+        (0.001 ETH, stored immutably in the contract) increments
+        <code>largeSellCount</code> and records the amount and block.</li>
+      <li><strong>Alert cross-chain.</strong> The Reactive Network delivers a callback to
+        SentinelCallback on Base Sepolia, which stores the alert count, amount, and block.</li>
+      <li><strong>Explain.</strong> This site's agent network reads that public state in your
+        browser and explains it — counts, amounts, threshold ratios, and whether the
+        watch → alert loop is intact.</li>
+    </ol>
+    <p>The loop has already fired end-to-end on testnet with a real, organic transfer:
+    one large transfer flagged, one alert received, matching amounts. The panel above
+    reads the contracts directly, so you can verify every number yourself.</p>
+  </section>
+
+  <section id="agents">
+    <h2>Agents in this network</h2>
+    <p>Loaded at runtime from the published network definition
+    (<a href="sentinel_watchdog.network.json">sentinel_watchdog.network.json</a>) —
+    the same file any conforming browser runtime can load.</p>
+    <div id="agents-list" class="cards"></div>
+  </section>
+
+  <section id="interact">
+    <h2>Ask the watchdog</h2>
+    <p>The front agent delegates to the chain reader for a fresh on-chain read, asks the
+    interpreter to classify it, and answers with the exact values. Try it:</p>
+    <form id="ask-form">
+      <input id="ask-q" type="text" placeholder="e.g. What is the latest large-transfer status?"
+             aria-label="Your question for the watchdog">
+      <button type="submit">Run network</button>
+    </form>
+    <div class="presets">
+      <button type="button" class="secondary" data-q="What is the latest large-transfer status?">Latest status</button>
+      <button type="button" class="secondary" data-q="Did every flagged transfer produce an alert?">Check the alert loop</button>
+      <button type="button" class="secondary" data-q="How large was the biggest flagged transfer compared to the threshold?">Compare to threshold</button>
+    </div>
+    <ol id="trace"></ol>
+    <div id="answer">The network's answer will appear here.</div>
+  </section>
+
+  <section id="byok">
+    <h2>LLM settings (optional — bring your own key)</h2>
+    <p>The watchdog's answers above are deterministic and need <strong>no LLM and no key</strong>.
+    If you want LLM narration later, you can store your own OpenAI-compatible router profile here.
+    Your key stays in this browser (localStorage for this origin only) and is never sent to this
+    site, the manifest, or any peer — exactly as the agentic web specification requires.</p>
+    <div class="byok-grid">
+      <input id="byok-base" type="url" placeholder="Router base URL, e.g. https://api.openai.com/v1" aria-label="Router base URL">
+      <input id="byok-model" type="text" placeholder="Model name" aria-label="Model name">
+      <input id="byok-key" type="password" placeholder="API key (stored locally only)" aria-label="API key" autocomplete="off">
+      <div class="byok-actions">
+        <button id="byok-save" type="button">Save locally</button>
+        <button id="byok-clear" type="button" class="secondary">Clear</button>
+      </div>
+    </div>
+    <p id="byok-status" class="source"></p>
+  </section>
+
+  <section id="files">
+    <h2>Files for agents and runtimes</h2>
+    <p>This site conforms to the <em>Minimum Viable Specification for a Worldwide Agentic Web</em>
+    (MVP Profile 0.2, Cognizant AI Lab). Another agent site can call this network by taking this
+    page's folder URL, appending the network name (<code>sentinel_watchdog</code>), and loading the
+    manifest from that base.</p>
+    <table class="files">
+      <tr><th>File</th><th>What it is</th></tr>
+      <tr><td><a href="agent-manifest.json">agent-manifest.json</a></td>
+          <td>Machine-readable index of this site: the published network (name, front agent, network file), router metadata, and peer policy. Public GET, CORS-enabled when hosted.</td></tr>
+      <tr><td><a href="sentinel_watchdog.network.json">sentinel_watchdog.network.json</a></td>
+          <td>The agent network definition (Neuro SAN data model, JSON serialisation): agents, their functions, instructions, tools, and site actions.</td></tr>
+      <tr><td><a href="runtime.js">runtime.js</a></td>
+          <td>The runtime file: a dependency-free browser runtime that loads the manifest and network, validates them, and runs the front agent with bounded steps.</td></tr>
+      <tr><td><a href="runtime.json">runtime.json</a></td>
+          <td>Runtime descriptor: exact conformance subset, assumptions, and what is planned next.</td></tr>
+      <tr><td><a href="links.json">links.json</a></td>
+          <td>Peer-network link map. No peers are bound yet — the watchdog currently calls only its own agents.</td></tr>
+      <tr><td><a href="agent-mcp.json">agent-mcp.json</a></td>
+          <td>MCP facade status: explicitly unavailable on static hosting (see the file for why, and how agents interact instead).</td></tr>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <p>Sentinel Watchdog · testnet deployment (Lasna + Base Sepolia) · all values are testnet values, not real funds.<br>
+  Open source under the Apache License 2.0 · Built for The Open Agentic Web Challenge (Devpost × Cognizant).</p>
+</footer>
+
+<script src="runtime.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
