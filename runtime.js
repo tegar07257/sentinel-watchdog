@@ -15,7 +15,11 @@
 (function (global) {
   "use strict";
 
-  var CONTRACT = "0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9";
+  /* Pair #3 (hardened redeploy, 2026-11-15): the two contracts live at
+   * DIFFERENT addresses — CONTRACT is the Sentinel on Lasna, CALLBACK is
+   * SentinelCallback on Base Sepolia. (Pair #1 shared one address.) */
+  var CONTRACT = "0xE86A5E5D1bCC4c1bF68aecAA8D3763BF475e8AE0";
+  var CALLBACK = "0x61D4b1F2bC65d578B00CC9CF64a83EA191Cd6245";
 
   var CHAINS = {
     lasna: {
@@ -28,7 +32,7 @@
       name: "Base Sepolia",
       chainId: 84532,
       rpc: "https://sepolia.base.org",
-      explorer: "https://sepolia.basescan.org/address/" + CONTRACT,
+      explorer: "https://sepolia.basescan.org/address/" + CALLBACK,
       role: "SentinelCallback (alert receiver)"
     }
   };
@@ -46,25 +50,25 @@
   };
 
   /*
-   * Last verified on-chain snapshot, read with `cast call` against the public
-   * RPC endpoints above on 2026-11-14 (~11:05 WIB, Asia/Jakarta). Used ONLY as
+   * Last verified on-chain snapshot, read via eth_call against the public
+   * RPC endpoints above on 2026-11-15 (~12:25 WIB, Asia/Jakarta). Used ONLY as
    * a labelled fallback when live reads fail — never presented as live data.
    */
   var VERIFIED_SNAPSHOT = {
-    asOf: "2026-11-14 (~11:05 WIB)",
+    asOf: "2026-11-15 (~12:25 WIB)",
     source: "cast call against the public RPC endpoints listed in this file",
     lasna: {
-      largeSellCount: "1",
-      lastLargeSellAmountWei: "70873991024375358",
-      lastLargeSellBlock: "58518904",
+      largeSellCount: "18",
+      lastLargeSellAmountWei: "274850660950339408",
+      lastLargeSellBlock: "58971012",
       lastCronBlock: "0",
-      thresholdWei: "1000000000000000",
-      balanceWei: "57821200000000000"
+      thresholdWei: "50000000000000000",
+      balanceWei: "5094100000000000"
     },
     baseSepolia: {
-      lastAlertCount: "1",
-      lastAlertAmountWei: "70873991024375358",
-      lastAlertBlock: "58518910"
+      lastAlertCount: "18",
+      lastAlertAmountWei: "274850660950339408",
+      lastAlertBlock: "58971017"
     }
   };
 
@@ -89,8 +93,8 @@
     });
   }
 
-  function ethCall(url, selector) {
-    return rpc(url, "eth_call", [{ to: CONTRACT, data: selector }, "latest"])
+  function ethCall(url, addr, selector) {
+    return rpc(url, "eth_call", [{ to: addr, data: selector }, "latest"])
       .then(function (hex) { return BigInt(hex).toString(10); });
   }
 
@@ -112,11 +116,11 @@
   function readSentinelState() {
     var url = CHAINS.lasna.rpc;
     return Promise.all([
-      ethCall(url, SEL.largeSellCount),
-      ethCall(url, SEL.lastLargeSellAmount),
-      ethCall(url, SEL.lastLargeSellBlock),
-      ethCall(url, SEL.lastCronBlock),
-      ethCall(url, SEL.threshold),
+      ethCall(url, CONTRACT, SEL.largeSellCount),
+      ethCall(url, CONTRACT, SEL.lastLargeSellAmount),
+      ethCall(url, CONTRACT, SEL.lastLargeSellBlock),
+      ethCall(url, CONTRACT, SEL.lastCronBlock),
+      ethCall(url, CONTRACT, SEL.threshold),
       ethBalance(url)
     ]).then(function (v) {
       return {
@@ -133,9 +137,9 @@
   function readCallbackState() {
     var url = CHAINS.baseSepolia.rpc;
     return Promise.all([
-      ethCall(url, SEL.lastAlertCount),
-      ethCall(url, SEL.lastAlertAmount),
-      ethCall(url, SEL.lastAlertBlock)
+      ethCall(url, CALLBACK, SEL.lastAlertCount),
+      ethCall(url, CALLBACK, SEL.lastAlertAmount),
+      ethCall(url, CALLBACK, SEL.lastAlertBlock)
     ]).then(function (v) {
       return { lastAlertCount: v[0], lastAlertAmountWei: v[1], lastAlertBlock: v[2] };
     });
@@ -306,6 +310,7 @@
     formatEth: formatEth,
     CHAINS: CHAINS,
     CONTRACT: CONTRACT,
+    CALLBACK: CALLBACK,
     VERIFIED_SNAPSHOT: VERIFIED_SNAPSHOT
   };
 })(window);

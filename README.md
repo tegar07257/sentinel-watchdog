@@ -31,7 +31,7 @@ loop integrity: every flagged transfer should have produced exactly one alert.
 
 1. **Watch** — the `Sentinel` reactive contract (Lasna testnet) subscribes to
    `Transfer` events of WETH on Base Sepolia (`0x4200000000000000000000000000000000000006`).
-2. **Decide on-chain** — a transfer ≥ the immutable threshold (0.001 ETH) increments
+2. **Decide on-chain** — a transfer ≥ the immutable threshold (0.05 ETH) increments
    `largeSellCount` and records amount + block. Nothing off-chain can fake or skip this.
 3. **Alert cross-chain** — the Reactive Network delivers a callback to
    `SentinelCallback` on Base Sepolia, which stores the alert count, amount, and block.
@@ -40,30 +40,37 @@ loop integrity: every flagged transfer should have produced exactly one alert.
 
 ## Live testnet deployment (verify it yourself)
 
-Both contracts share one address (deployed with the same key and nonce 0 on both chains):
+Current deployment is pair #3, the hardened redeploy of 2026-11-15
+(threshold 0.05 ETH, Cron1000, callback gas limit 500,000). The two
+contracts live at different addresses:
 
 ```
-0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9
+Sentinel (Lasna):             0xE86A5E5D1bCC4c1bF68aecAA8D3763BF475e8AE0
+SentinelCallback (Base Sep.): 0x61D4b1F2bC65d578B00CC9CF64a83EA191Cd6245
 ```
 
 | Component | Chain | Chain ID | Evidence |
 |---|---|---|---|
-| Sentinel | Lasna (Reactive testnet) | 5318007 | deploy tx `0x6dfbcbe1e8735a421d45b027c53efab7888c980130e0627263f87cd39c17dedd` |
-| SentinelCallback | Base Sepolia | 84532 | deploy tx `0xfd50ead776cb334992491d8be7398542a938ff10cd21f35a8f2c3c9fc793e4db` |
+| Sentinel | Lasna (Reactive testnet) | 5318007 | deploy tx `0xba6ad5c8f859aeb2ba4f9a2fdaf1e3e715031c589a49f4e75650b377599cdf51` |
+| SentinelCallback | Base Sepolia | 84532 | deploy tx `0x1dc55d939db77ffa3102b98481f34739d7abbcfaf18caf8ea4ac9bee3d25b490` |
 
-**End-to-end loop — verified with a real organic transfer.** The sentinel flagged a
-WETH transfer, and the callback arrived on Base Sepolia with the matching amount.
-State read live from the public RPCs on 2026-11-14:
+**End-to-end loop — verified with real organic transfers.** The sentinel flagged
+WETH transfers ≥ 0.05 ETH, and every callback arrived on Base Sepolia with the
+matching amount (18 detections / 18 alerts at the last full read).
+State read live from the public RPCs on 2026-11-15:
 
 | Value | On-chain |
 |---|---|
-| `largeSellCount` (Lasna) | 1 |
-| `lastLargeSellAmount` | 0.070873991024375358 ETH (≈ 70.9× the 0.001 ETH threshold) |
-| `lastLargeSellBlock` | 58518904 |
-| `lastAlertCount` (Base Sepolia) | 1 |
-| `lastAlertAmount` | 0.070873991024375358 ETH |
-| `lastAlertBlock` | 58518910 |
-| Sentinel lREACT balance (fuel) | 0.0578212 lREACT |
+| `largeSellCount` (Lasna) | 18 |
+| `lastLargeSellAmount` | 0.274850660950339408 ETH (≈ 5.5× the 0.05 ETH threshold) |
+| `lastLargeSellBlock` | 58971012 |
+| `lastAlertCount` (Base Sepolia) | 18 |
+| `lastAlertAmount` | 0.274850660950339408 ETH |
+| `lastAlertBlock` | 58971017 |
+| Sentinel lREACT balance (fuel) | 0.0050941 lREACT |
+
+(The first deployment, pair #1 of 2026-11-14, shared the address
+`0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9` on both chains; it is superseded.)
 
 The website's status panel reads these getters in your browser; the same snapshot is
 embedded as a clearly labelled fallback if an RPC is unreachable.

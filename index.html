@@ -33,7 +33,7 @@
     <div class="cards">
       <article class="card">
         <h3>Sentinel — Lasna (Reactive testnet)</h3>
-        <p class="mono">Contract: <span id="contract-address">0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9</span><br>
+        <p class="mono">Contract: <span id="contract-address">0xE86A5E5D1bCC4c1bF68aecAA8D3763BF475e8AE0</span><br>
         Chain ID 5318007 · watches WETH transfers on Base Sepolia</p>
         <dl class="stats">
           <dt>Large transfers flagged</dt><dd id="lv-count">…</dd>
@@ -46,8 +46,8 @@
       </article>
       <article class="card">
         <h3>SentinelCallback — Base Sepolia</h3>
-        <p class="mono">Same contract address, chain ID 84532 ·
-        <a id="explorer-link" href="https://sepolia.basescan.org/address/0xb78d73DEfCcCD42f3A6bbca4E05aF9149320c3C9" rel="noopener">view on Basescan</a></p>
+        <p class="mono">Contract: 0x61D4b1F2bC65d578B00CC9CF64a83EA191Cd6245, chain ID 84532 ·
+        <a id="explorer-link" href="https://sepolia.basescan.org/address/0x61D4b1F2bC65d578B00CC9CF64a83EA191Cd6245" rel="noopener">view on Basescan</a></p>
         <dl class="stats">
           <dt>Alerts received</dt><dd id="cb-count">…</dd>
           <dt>Latest alert amount</dt><dd id="cb-amount">…</dd>
@@ -68,7 +68,7 @@
         <code>Transfer</code> events of the WETH contract on Base Sepolia
         (<code>0x4200000000000000000000000000000000000006</code>).</li>
       <li><strong>Decide on-chain.</strong> A transfer at or above the threshold
-        (0.001 ETH, stored immutably in the contract) increments
+        (0.05 ETH, stored immutably in the contract) increments
         <code>largeSellCount</code> and records the amount and block.</li>
       <li><strong>Alert cross-chain.</strong> The Reactive Network delivers a callback to
         SentinelCallback on Base Sepolia, which stores the alert count, amount, and block.</li>
